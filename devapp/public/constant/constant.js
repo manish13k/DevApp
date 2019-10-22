@@ -1,0 +1,1 @@
+export const renderApi = 'https://jsonplaceholder.typicode.com/users';
