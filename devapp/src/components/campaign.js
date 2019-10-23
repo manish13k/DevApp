@@ -4,10 +4,10 @@ import { connect } from "react-redux";
 import { campaignData } from "../actions/index";
 import {renderApi} from "../../public/constant/constant";
 import {getCampaignData} from "../../public/constant/getCampaignData";
+import { handleFilterData } from "../handlers/handlers";
+import SearchComponent from "./search";
+import ListComponent from "./list";
 import "../../public/css/main.css";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { getUserName, handleFilterData } from "../handlers/handlers"
 
 class Campaign extends React.Component {
     constructor(props) {
@@ -22,9 +22,6 @@ class Campaign extends React.Component {
             name: ""
           };
         this.renderApiData = this.renderApiData.bind(this);
-        this.handleStartDate = this.handleStartDate.bind(this);
-        this.handleEndDate = this.handleEndDate.bind(this);
-        this.handlenameSearch = this.handlenameSearch.bind(this);
     }
 
     componentDidMount() {
@@ -32,6 +29,7 @@ class Campaign extends React.Component {
         this.props.campaignData(getCampaignData);
     }
 
+    /* get campaign list */
     getCampaignList() {
         this.props.campaignData(this.state.getDataFromUser);
     }
@@ -51,6 +49,7 @@ class Campaign extends React.Component {
         });
     }
 
+    /* handle start date */
     handleStartDate(date) {
         if(new Date(date) > new Date(this.state.endDate)) { 
             this.setState({
@@ -65,13 +64,15 @@ class Campaign extends React.Component {
         }
     };
 
-    handlenameSearch(e) {
+    /* handle search name */
+    handlenameSearch() {
         const getName = document.getElementById('username').value;
         this.setState({
             name: getName
         });
     }
 
+    /* handle end date */
     handleEndDate(date) {
         if(this.state.startDate === "" || new Date(this.state.startDate) > new Date(date)) { 
             alert('You can not select an end-date that is before the start-date.');
@@ -92,55 +93,30 @@ class Campaign extends React.Component {
             self.getCampaignList();
         };
         const getFilterData = handleFilterData(this.state.startDate, this.state.endDate, this.state.name, this.props.campaign);
-      const { loading, isError } = this.state;
-      return(
-        <>
-        { !loading ? (
-        <table>
-            <tbody>
-                <tr>
-                    <th><DatePicker selected={this.state.startDate} placeholderText="Start Date" onChange={this.handleStartDate}/></th>
-                    <th><DatePicker selected={this.state.endDate} placeholderText="End Date" onChange={this.handleEndDate}/></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th><input type="text" name="username" id="username" placeholder="search by name" /><input type="submit" value="Go" onClick={this.handlenameSearch}/></th>
-                </tr>
-                <tr>
-                    <th>Name</th>
-                    <th>User Name</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Active</th>
-                    <th>Budget</th>
-                </tr>
-                { isError ? (
-                    <div>Something went wrong...</div>
+        const { loading, isError } = this.state;
+        return(
+            <>
+                { !loading ? (
+                    <table>
+                        <tbody>
+                            <SearchComponent 
+                                date={this.state} 
+                                handleStartDate={this.handleStartDate.bind(this)}
+                                handleEndDate={this.handleEndDate.bind(this)}
+                                handlenameSearch={this.handlenameSearch.bind(this)}
+                            />
+                            <ListComponent 
+                                isError={isError} 
+                                filterData={getFilterData}
+                                userData={this.state.userData}
+                            />
+                        </tbody>
+                    </table>
                 ) : (
-                    <>
-                        { getFilterData.map((data, index) => {
-                            const username = getUserName(this.state.userData, data.userId);
-                            return(
-                                <tr key={index}>
-                                    <td>{data.name}</td>
-                                    <td>{username}</td>
-                                    <td>{data.startDate}</td>
-                                    <td>{data.endDate}</td>
-                                    <td>Active</td>
-                                    <td>{parseInt(data.Budget/70)} USD</td>
-                                </tr>
-                            );
-                        })}
-                    </>
+                    <div>Data is loading....</div>
                 )}
-            </tbody>
-        </table>
-        
-        ) : (
-            <div>Data is loading....</div>
-        )}
-        </>
-        );
+            </>
+            );
     }
 }
 
@@ -156,9 +132,6 @@ const mapDispatchToProps = dispatch => {
     };
 }
 
-const Data = connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(Campaign);
+const Data = connect(mapStateToProps, mapDispatchToProps)(Campaign);
 export default Data;
 
